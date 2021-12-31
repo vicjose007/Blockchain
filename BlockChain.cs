@@ -66,6 +66,16 @@ namespace Blockchain
 
     public class Block : IBlock
     {
+
+        public Block(byte[] data)
+        {
+            Data = data ?? throw new ArgumentNullException(nameof(data));
+            Nonce = 0;
+            prevHash = new byte[] { 0x00 };
+            TimeStamp = DateTime.Now;
+        }
+
+
         public byte[] Data { get; }
         public byte[] Hash { get; set; }
         public int Nonce { get; set; }
@@ -74,7 +84,8 @@ namespace Blockchain
 
         public override string ToString()
         {
-            return $"{BitConverter.ToString(Hash).Replace("-", "")}:\n{BitConverter.ToString(prevHash).Replace("-", "")}\n {Nonce} {TimeStamp}";
+            return $"{BitConverter.ToString(Hash).Replace("-", "")}\nPrevius Hash:{BitConverter.ToString(prevHash).Replace("-", "")}\n" + "Nonce: " + Nonce + "\n" + "TimeStamp: " + TimeStamp;
+
         }
 
     }
@@ -131,10 +142,24 @@ namespace Blockchain
     class Program
     {
 
-
         static void Main(string[] args)
         {
+            Random rnd = new Random(DateTime.UtcNow.Millisecond);
+            IBlock genesis = new Block(new byte[] { 0x00, 0x00, 0x00, 0x00, 0x00 });
+            byte[] difficulty = new byte[] { 0x00, 0x00 };
 
+            BlockChain chain = new BlockChain(difficulty, genesis);
+            for (int i = 0; i < 200; i++)
+            {
+                var data = Enumerable.Range(0, 2256).Select(p => (byte)rnd.Next());
+                chain.Add(new Block(data.ToArray()));
+
+                Console.WriteLine($"Hash: {chain.LastOrDefault()?.ToString()}");
+
+                Console.WriteLine($"Chain is valid: {chain.IsValid()} \n");
+            }
+
+            Console.ReadLine();
         }
     }
 }
